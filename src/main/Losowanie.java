@@ -3,6 +3,7 @@ package main;
 import java.util.Random;
 import wyjątki.NiepoprawneLosowanie;
 
+// Simple Singleton wrapper for a random number generator
 public final class Losowanie {
     private static final Random r = new Random();
 
