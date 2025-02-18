@@ -9,18 +9,28 @@ import zlecenia.Zlecenie;
 import java.util.ArrayList;
 import java.util.HashMap;
 
+// Investor who makes decisions based on the Simple Moving Average indicator
 public class InwestorSMA extends Inwestor {
 
-    // Dane
-    private HashMap<String, ArrayList<Integer>> cenySMA5;
-    private HashMap<String, ArrayList<Integer>> cenySMA10;
-    private HashMap<String, Double> poprzednieSMA10;
-    private HashMap<String, Double> poprzednieSMA5;
-    private int ileTur;
-    private int indeksSMA10;
-    private int indeksSMA5;
+    // Data
 
-    // Techniczne
+    // SMA5 prices
+    private HashMap<String, ArrayList<Integer>> cenySMA5;
+    // SMA10 prices
+    private HashMap<String, ArrayList<Integer>> cenySMA10;
+    // previous SMA5
+    private HashMap<String, Double> poprzednieSMA5;
+    // previous SMA10
+    private HashMap<String, Double> poprzednieSMA10;
+    // number of sessions
+    private int ileTur;
+    // SMA5 index
+    private int indeksSMA5;
+    // SMA10 index
+    private int indeksSMA10;
+
+    // Technicalities
+    
     public InwestorSMA(int id, int balans, HashMap<String, Integer> liczbaAkcji, DaneSymulacji daneSymulacji) {
         super(id, balans, liczbaAkcji, daneSymulacji);
         this.cenySMA5 = new HashMap<>();
@@ -43,7 +53,9 @@ public class InwestorSMA extends Inwestor {
         this.ileTur = this.indeksSMA5 = this.indeksSMA10 = 0;
     }
 
-    // Operacje
+    // Operations
+
+    // Calculates the SMA5 for a company
     private double obliczSMA5(String spółka) {
         ArrayList<Integer> ceny = this.cenySMA5.get(spółka);
         double suma = 0;
@@ -52,6 +64,7 @@ public class InwestorSMA extends Inwestor {
         return suma / 5.0;
     }
 
+    // Calculates the SMA10 for a company
     private double obliczSMA10(String spółka) {
         ArrayList<Integer> ceny = this.cenySMA10.get(spółka);
         double suma = 0;
@@ -60,8 +73,7 @@ public class InwestorSMA extends Inwestor {
         return suma / 10.0;
     }
 
-    // na koniec tury inwestor SMA aktualizuje swoje wskaźniki
-    // (to tak samo, jakby odpytał się symulacji o cenę ostatniej transakcji na początku następnej tury)
+    // At the end of the session the SMA investor updates their indicators
     @Override
     public void koniecTury() {
         ++this.ileTur;
@@ -81,23 +93,23 @@ public class InwestorSMA extends Inwestor {
         }
     }
 
-    // metoda obliczająca czy doszło do przecięcia SMA10 przez SMA5, a jeśli tak, to z której strony
+    // Tells if the SMA5 and SMA10 indicators intersected, and if yes, tells whether SMA5 hit
+    // SMA10 from above or from below
     private Przecięcie przecięcie(String spółka) {
         Przecięcie wynik = null;
-        // przecięcie z dołu
+        // intersection from below
         if (this.poprzednieSMA5.get(spółka) < this.poprzednieSMA10.get(spółka)
                 && this.obliczSMA5(spółka) > this.obliczSMA10(spółka))
             return Przecięcie.DÓŁ;
-        // przecięcie z góry
+        // intersection from above
         if (this.poprzednieSMA5.get(spółka) > this.poprzednieSMA10.get(spółka)
                 && this.obliczSMA5(spółka) < this.obliczSMA10(spółka))
             return Przecięcie.GÓRA;
-        // wpp brak przecięcia
+        // no intersection
         return Przecięcie.BRAK;
     }
 
-    // znajduje spółkę, w którą będzie chciał zainwestować inwestor SMA
-    // (przyjmujemy, że inwestuje w pierwszą spółkę z niepustym sygnałem wg arbitralnej kolejności)
+    // Finds a company in which the SMA investor will invest
     private String znajdźSpółkę() {
         for (String spółka : this.cenySMA10.keySet()) {
             Przecięcie przecięcie = this.przecięcie(spółka);
@@ -115,17 +127,17 @@ public class InwestorSMA extends Inwestor {
 
     @Override
     public Zlecenie złóżZlecenie() {
-        // jeżeli jesteśmy co najwyżej w 10. turze, to nie mamy jak porównać dwóch poprzednich SMA10
+        // There is no way to compare SMA10 values if the session number is < 11, therefore the SMA investor is idle
         if (this.ileTur < 11)
             return null;
 
         String[] sygnał = this.znajdźSpółkę().split(":");
         String spółka = sygnał[0];
-        // jeżeli brak sygnału, nie inwestujemy
+        // Don't invest if there is no impulse
         if (spółka.equals("BRAK"))
             return null;
 
-        // składamy zlecenie dot. pierwszej znalezionej spółki
+        // Issue an order for the shares of the first found company
         TypZlecenia typZlecenia = TypZlecenia.valueOf(sygnał[1]);
         TerminZlecenia terminZlecenia = this.losujTermin();
         int limitCeny = this.losujCenę(spółka);
