@@ -10,13 +10,19 @@ import wyjątki.NiepoprawnaTransakcja;
 
 public abstract class Inwestor {
 
-    // Dane
+    // Data
+
+    // unique investor ID
     protected  int id;
+    // investor account balance
     protected int balans;
+    // information about numbers of controlled companies' shares
     protected HashMap<String, Integer> liczbaAkcji;
+    // shared simulation data
     protected DaneSymulacji daneSymulacji;
 
-    // Techniczne
+    // Technicalities
+    
     public Inwestor(int id, int balans, HashMap<String, Integer> liczbaAkcji, DaneSymulacji daneSymulacji) {
         this.id = id;
         this.balans = balans;
@@ -33,24 +39,28 @@ public abstract class Inwestor {
         return wyn;
     }
 
-    // Operacje
+    // Operations
+
     public int balans() {
         return this.balans;
     }
 
+    // Reads the number of shares of the company
     public int liczbaAkcji(String spółka) {
         return this.liczbaAkcji.get(spółka);
     }
 
-    // metoda służąca do odpytania inwestora o decyzję inwestycyjną
+    // Queries the investor about their investment decisions
     public abstract Zlecenie złóżZlecenie();
 
+    // Updates the investor's account balance
     public void zmieńBalans(int zmiana) throws NiepoprawnaTransakcja {
         this.balans += zmiana;
         if (this.balans < 0)
             throw new NiepoprawnaTransakcja();
     }
 
+    // Updates the number of shares of a given company
     public void zmieńAkcje(String akcja, int zmiana) throws NiepoprawnaTransakcja {
         if (!this.liczbaAkcji.containsKey(akcja))
             throw new NiepoprawnaTransakcja();
@@ -59,7 +69,7 @@ public abstract class Inwestor {
             throw new NiepoprawnaTransakcja();
     }
 
-    // tworzy odpowiedni typ zlecenia z podanymi parametrami
+    // Creates a stock order of the appropriate type
     protected Zlecenie stwórzZlecenie(TerminZlecenia terminZlecenia, TypZlecenia typZlecenia, String spółka,
                                     int liczbaAkcji, int limitCeny, int turaZłożenia, int ostatniaTura) {
         return switch (terminZlecenia) {
@@ -72,23 +82,25 @@ public abstract class Inwestor {
         };
     }
 
+    // Returns a random order end date
     protected TerminZlecenia losujTermin() {
         int termin = Losowanie.losuj(0, Symulacja.LICZBA_TERMINÓW_ZLECEŃ - 1);
         return TerminZlecenia.values()[termin];
     }
 
+    // Returns a random sale price of a company's shares
     protected int losujCenę(String spółka) {
         int ostatniaCena = this.daneSymulacji.cenaSpółki(spółka);
         return Losowanie.losuj(Math.max(1, ostatniaCena - 10), ostatniaCena + 10);
     }
 
-    // zakładamy, że żaden inwestor nie chce za daną cenę sprzedać więcej akcji, niż mógłby ich za nią kupić
+    // Randomly selects the number of a company's shares the investor will be willing to buy
     protected int losujLiczbęAkcji(int limitCeny, String spółka, TypZlecenia typZlecenia) {
         int maxLiczbaAkcji = this.balans / limitCeny;
         return Losowanie.losuj(0, Math.min(maxLiczbaAkcji, this.liczbaAkcji(spółka)));
     }
 
-    // metoda aktualizująca dane inwestora na koniec tury giełdowej
+    // Updates investor data at the end of a stock session
     public abstract void koniecTury();
 
 }
