@@ -16,19 +16,28 @@ import zlecenia.TerminZlecenia;
 import zlecenia.TypZlecenia;
 import zlecenia.Zlecenie;
 
+// Simulation class
 public class Symulacja {
 
-    // Dane
+    // Data
+
+    // number of sessions
     private int liczbaTur;
+    // companies
     private ArrayList<String> spółki;
+    // participating investors
     private ArrayList<Inwestor> inwestorzy;
+    // structure of order queues concerning companies
     private HashMap<String, StrukturaKolejekZleceń> arkusze;
+    // expected number of input lines
     private static final int OCZEKIWANA_LICZBA_LINII = 3;
+    // number of transaction types
     public static final int LICZBA_TYPÓW_ZLECEŃ = 2;
+    // number of order expiration types
     public static final int LICZBA_TERMINÓW_ZLECEŃ = 3;
     private DaneSymulacji daneSymulacji;
 
-    // Techniczne
+    // Technicalities
 
     public Symulacja(String ścieżka, String liczbaTur) {
         try {
@@ -95,18 +104,21 @@ public class Symulacja {
         }
     }
 
-    // Operacje
+    // Operations
 
+    // Add buy order
     private void dodajZlecenieKupna(Zlecenie z) {
         if (z.balansInwestora() >= z.limitCeny() * z.liczbaAkcji())
             this.arkusze.get(z.spółka()).wstaw(z);
     }
 
+    // Add sell order
     private void dodajZlecenieSprzedaży(Zlecenie z) {
         if (z.liczbaAkcjiInwestora() >= z.liczbaAkcji())
             this.arkusze.get(z.spółka()).wstaw(z);
     }
 
+    // Add order
     public void dodajZlecenie(Zlecenie z) {
         if (z.typZlecenia() == TypZlecenia.KUPNO)
             this.dodajZlecenieKupna(z);
@@ -115,7 +127,7 @@ public class Symulacja {
     }
 
 
-    // Obsługa transakcji wynikającej ze zgodności dwóch zleceń
+    // Transaction
     private void transakcja(Zlecenie kupno, Zlecenie sprzedaż, int cenaAkcji, int liczbaAkcji) {
         kupno.zmieńBalansInwestora(-cenaAkcji * liczbaAkcji);
         kupno.zmieńLiczbęAkcjiInwestora(kupno.spółka(), liczbaAkcji);
@@ -124,25 +136,25 @@ public class Symulacja {
         this.daneSymulacji.zaktualizujCenęAkcji(sprzedaż.spółka(), cenaAkcji);
     }
 
-    // obsługuje parę zleceń najwyżej postawionych w arkuszu zleceń danej spółki
+    // Handles the interaction between two orders that occupy the highest positions
+    // in the company's order sheet
     private void obsłużParęZleceń(ParaZleceń p, ArrayList<Zlecenie> niezrealizowane) {
         Zlecenie wcześniejsze = Zlecenie.wcześniejsze(p.kupno(), p.sprzedaż());
         Zlecenie późniejsze = wcześniejsze == p.kupno() ? p.sprzedaż() : p.kupno();
-
-        // ustalamy cenę akcji jako limit ceny wcześniej postawionego zlecenia
+        
+        // Set share price to the price limit of a previously issued order
         int cenaAkcji = wcześniejsze.limitCeny();
 
-        // jeżeli zlecenia nie są zgodne cenowo, to przyjmujemy, że usuwamy wcześniejsze
+        // If the orders' price requests are incompatible, remove the earlier order
         if (!wcześniejsze.zgodne(późniejsze)) {
             niezrealizowane.add(wcześniejsze);
             this.dodajZlecenie(późniejsze);
             return;
         }
 
-        // nie dopuszczamy częściowej realizacji obu zleceń
         int liczbaAkcji = Math.min(wcześniejsze.liczbaAkcji(), późniejsze.liczbaAkcji());
 
-        // sprawdzamy, czy obaj inwestorzy mają niezbędne do wykonania transakcji środki (fundusze/akcje)
+        // Check if both investors have the necessary assets (money/shares)
         if (!wcześniejsze.czyMożliwe(cenaAkcji, liczbaAkcji)) {
             this.dodajZlecenie(późniejsze);
             return;
@@ -152,10 +164,10 @@ public class Symulacja {
             return;
         }
 
-        // dochodzi do transakcji
+        // The transaction takes place
         this.transakcja(p.kupno(), p.sprzedaż(), cenaAkcji, liczbaAkcji);
 
-        // przywracamy częściowo zrealizowane zlecenie do arkusza zleceń spółki
+        // Restore the partially completed order to the company's sheet
         boolean czyPrzywrócić = wcześniejsze.zrealizujCzęściowo(liczbaAkcji);
         if (czyPrzywrócić)
             this.dodajZlecenie(wcześniejsze);
@@ -163,19 +175,19 @@ public class Symulacja {
         if (czyPrzywrócić)
             this.dodajZlecenie(późniejsze);
     }
-
-    // obsługuje arkusz zleceń danej spółki w obecnej turze
+    
+    // Matches the orders concering a company in the current session
     private void obsłużZleceniaSpółki(String spółka) {
         StrukturaKolejekZleceń zleceniaSpółki = this.arkusze.get(spółka);
         ArrayList<Zlecenie> niezrealizowane = new ArrayList<>();
 
-        // dopóki dalej istnieją nierozpatrzone zlecenia kupna i sprzedaży
+        // While there exist unhandled sell and buy orders
         while (!zleceniaSpółki.sprzedażPusta() && !zleceniaSpółki.kupnoPusta()) {
             ParaZleceń p = zleceniaSpółki.zdejmijParę();
             this.obsłużParęZleceń(p, niezrealizowane);
         }
 
-        // dalej nie da się zrealizować żadnego zlecenia; wrzucamy wszystko z powrotem na kolejkę
+        // No further orders can be completed; requeue the orders
         zleceniaSpółki.przerzućWszystkie(niezrealizowane);
         for (Zlecenie z : niezrealizowane)
             if (z.ostatniaTura() > this.daneSymulacji.obecnaTura() && z.terminZlecenia() != TerminZlecenia.BT)
