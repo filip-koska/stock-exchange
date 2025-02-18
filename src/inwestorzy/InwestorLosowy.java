@@ -9,17 +9,26 @@ import zlecenia.*;
 
 import java.util.HashMap;
 
+// Investor who makes random investment decisions
 public class InwestorLosowy extends Inwestor {
 
+    // Data
+
+    // Technicalities
+    
     public InwestorLosowy(int id, int balans, HashMap<String, Integer> liczbaAkcji, DaneSymulacji daneSymulacji) {
         super(id, balans, liczbaAkcji, daneSymulacji);
     }
 
+    // Operations
+
+    // Randomly selects the type of order the investor is going to submit
     private TypZlecenia losujTyp() {
         int typ = Losowanie.losuj(0, Symulacja.LICZBA_TYPÓW_ZLECEŃ - 1);
         return TypZlecenia.values()[typ];
     }
 
+    // Randomly selects the company whose shares the order will concern
     private String losujSpółkę() {
         int indeksSpółki = Losowanie.losuj(0, this.daneSymulacji.liczbaSpółek() - 1);
         return this.daneSymulacji.dajSpółkę(indeksSpółki);
@@ -42,7 +51,7 @@ public class InwestorLosowy extends Inwestor {
         return z;
     }
 
-    // dla inwestora losowego na koniec tury nie dzieje się nic wyjątkowego
+    // Nothing happens for the random investor at the end of the session
     @Override
     public void koniecTury() {}
 
