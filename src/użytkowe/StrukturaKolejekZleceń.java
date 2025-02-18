@@ -4,6 +4,7 @@ import zlecenia.Zlecenie;
 
 import java.util.ArrayList;
 
+// Interface for a structure of order queues
 public interface StrukturaKolejekZleceń {
     void wstaw(Zlecenie z);
     ParaZleceń zdejmijParę();
