@@ -15,7 +15,7 @@ import zlecenia.Zlecenie;
 
 import java.util.HashMap;
 
-// Simulation data and API for investors
+// API for investors
 public class DaneSymulacji {
 
     // Data
