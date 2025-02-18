@@ -15,17 +15,23 @@ import zlecenia.Zlecenie;
 
 import java.util.HashMap;
 
-// klasa służąca jako API symulacji dla inwestorów
+// Simulation data and API for investors
 public class DaneSymulacji {
 
-    // Dane
+    // Data
+
+    // number of days
     private int liczbaDni;
+    // shares prices
     private HashMap<String, Integer> cenyAkcji;
+    // current session number
     private int obecnaTura;
+    // current turn
     private int obecnaKolejność;
+    // array of companies
     private final ArrayList<String> spółki;
 
-    // Techniczne
+    // Technicalities
 
     public DaneSymulacji(ArrayList<String> spółki, HashMap<String, Integer> cenyAkcji, int liczbaDni) {
         this.spółki = spółki;
@@ -35,7 +41,7 @@ public class DaneSymulacji {
         this.obecnaKolejność = 0;
     }
 
-    // Operacje
+    // Operations
 
     public int liczbaDni() {
         return this.liczbaDni;
@@ -47,7 +53,7 @@ public class DaneSymulacji {
         return this.obecnaTura;
     }
 
-    // getter do spółki o odpowiednim indeksie
+    // Returns the name of the company with given index
     public String dajSpółkę(int i) {
         try {
             return this.spółki.get(i);
@@ -58,7 +64,7 @@ public class DaneSymulacji {
         }
     }
 
-    // getter do ceny zadanej spółki
+    // Returns the price of given company's shares
     public int cenaSpółki(String spółka) throws NiepoprawneZlecenie {
         Integer wynik = this.cenyAkcji.get(spółka);
         if (wynik == null)
@@ -68,14 +74,18 @@ public class DaneSymulacji {
 
 
 
+    // prepares the next session
     public int kolejnaTura() {
         this.obecnaKolejność = 0;
         return ++this.obecnaTura;
     }
 
+    // updates the turn
     public int zwiększKolejność() {
         return this.obecnaKolejność++;
     }
+
+    // updates a company's share price
     public void zaktualizujCenęAkcji(String spółka, int nowaCena) {
         this.cenyAkcji.put(spółka, nowaCena);
     }
