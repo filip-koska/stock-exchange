@@ -7,20 +7,31 @@ import symulacja.DaneSymulacji;
 import użytkowe.ParaKolejekZleceń;
 import wyjątki.*;
 
+// Stock order class
 public abstract class Zlecenie implements Comparable<Zlecenie> {
 
-    // Dane
+    // Data
+
+    // investor that issued the order
     protected Inwestor inwestor;
+    // company whose shares the order concerns
     protected String spółka;
+    // transaction type
     protected TypZlecenia typZlecenia;
+    // expiration type
     protected TerminZlecenia terminZlecenia;
+    // number of shares
     protected int liczbaAkcji;
+    // price limit (upper for buy, lower for sell)
     protected int limitCeny;
+    // issue session
     protected int turaZłożenia;
+    // issue turn
     protected int kolejnośćZłożenia;
+    // last session when the order can be completed
     protected int ostatniaTura;
 
-    // Techniczne
+    // Technicalities
 
     public Zlecenie(TypZlecenia typZlecenia, String spółka, int liczbaAkcji,
                     int limitCeny, int turaZłożenia, int kolejnośćZłożenia,
@@ -35,12 +46,12 @@ public abstract class Zlecenie implements Comparable<Zlecenie> {
         this.inwestor = inwestor;
     }
 
-    // Operacje
+    // Operations
 
-    // porównujemy w pierwszej kolejności po limicie ceny, potem po czasie złożenia
+    // When matching, prioritise price limits, then issue time
     @Override
     public int compareTo(Zlecenie z)  throws RóżneTypy {
-        // nie możemy porównywać zleceń różnych typów
+        // Comparison of different transaction types is illegal
         if (this.typZlecenia != z.typZlecenia)
             throw new RóżneTypy();
         if (this.limitCeny == z.limitCeny
@@ -98,8 +109,7 @@ public abstract class Zlecenie implements Comparable<Zlecenie> {
         return this.limitCeny;
     }
 
-    // sprawdzamy, czy transakcja z danymi parametrami jest możliwa do zrealizowania
-    // przy obecnym stanie portfela inwestora
+    // Check if specified transaction is possible given the investor's current balance
     public boolean czyMożliwe(int cena, int liczbaAkcji) {
         return switch (this.typZlecenia) {
             case KUPNO -> this.balansInwestora() >= cena * liczbaAkcji;
@@ -107,31 +117,34 @@ public abstract class Zlecenie implements Comparable<Zlecenie> {
         };
     }
 
-    // znajdujemy chronologicznie pierwsze z dwóch zleceń
+    // Find the earlier of two orders
     public static Zlecenie wcześniejsze(Zlecenie a, Zlecenie b) {
         if (a.turaZłożenia != b.turaZłożenia)
             return a.turaZłożenia < b.turaZłożenia ? a : b;
         return a.kolejnośćZłożenia < b.turaZłożenia ? a : b;
     }
-
-    // sprawdzamy, czy limit zlecenia kupna jest >= limitowi zlecenia sprzedaży
+    
+    // Check if the price limits of two orders are compatible
+    // (buy price limit >= sell price limit)
     public boolean zgodne(Zlecenie z) {
         return switch (this.typZlecenia) {
             case KUPNO -> this.limitCeny >= z.limitCeny;
             case SPRZEDAŻ -> z.zgodne(this);
         };
     }
-
-    // realizujemy częściowo zlecenie, aktualizując pozostałą przypisaną mu liczbę akcji
+    
+    // Partially complete the order and update the remaining associated number of shares
     public boolean zrealizujCzęściowo(int zmiana) {
         this.liczbaAkcji -= zmiana;
         return this.liczbaAkcji > 0;
     }
 
+    // Update investor's account balance
     public void zmieńBalansInwestora(int zmiana) {
         this.inwestor.zmieńBalans(zmiana);
     }
 
+    // Update investor's number of given company's shares
     public void zmieńLiczbęAkcjiInwestora(String spółka, int zmiana) {
         this.inwestor.zmieńAkcje(spółka, zmiana);
     }
