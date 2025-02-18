@@ -6,7 +6,7 @@ import java.util.Scanner;
 import java.util.Arrays;
 import symulacja.Symulacja;
 
-
+// Main routine
 public class Main {
     public static void main(String[] args) {
         Symulacja sym = new Symulacja(args[0], args[1]);
