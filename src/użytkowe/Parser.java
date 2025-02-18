@@ -6,15 +6,18 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Scanner;
 
+// Parser class
 public class Parser {
 
-    // Techniczne
+    // Data
+    
+    // Technicalities
 
     public Parser() {}
 
-    // Operacje
+    // Operations
 
-    // pierwsza linia to typy inwestorów
+    // Process first line of input (investor types)
     public String[] przetwórzPierwsząLinię(String linia) {
         try {
             String[] wynik = linia.split(" ");
@@ -31,7 +34,7 @@ public class Parser {
         }
     }
 
-    // druga linia to opis początkowych cen akcji
+    // Process second line of input (initial shares' prices)
     public HashMap<String, Integer> przetwórzDrugąLinię(String linia) {
         try {
             String[] spółki = linia.split(" ");
@@ -52,6 +55,7 @@ public class Parser {
     }
 
     // trzecia linia to opis początkowego stanu portfela inwestorów
+    // Process third line of input (initial investors' account balances)
     public ArrayList<ParaSpółkaLiczba> przetwórzTrzeciąLinię(String linia) {
         try {
             String[] dane = linia.split(" ");
@@ -73,11 +77,12 @@ public class Parser {
         }
     }
 
+    // Check if the company data is correct and the company had not already been registered
     private boolean nowaSpółka(String spółka, HashMap<String, Integer> mapa) {
         return this.poprawnaSpółka(spółka) && !mapa.containsKey(spółka);
     }
 
-    // przyjmujemy tylko niepuste co najwyżej 5-literowe nazwy spółek nad alfabetem wielkich liter angielskich
+    // Accept only words with at most 5 letters made from capital letters of the English alphabet
     private boolean poprawnaSpółka(String spółka) {
         return !spółka.isEmpty() && spółka.length() < 6 && spółka.matches("[A-Z]+");
     }
